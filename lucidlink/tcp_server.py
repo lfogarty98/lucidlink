@@ -1,24 +1,26 @@
 import socketserver
 import cbor2
+import struct
 from message_handler import MessageHandler
 
 class LucidLinkTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
         print(f"Connection from: {self.client_address}")
-        handler = MessageHandler()
+        handler = MessageHandler(self.request)
         while True:
             try:
-                # Read data from the device
-                data = self.request.recv(1024)
-                if not data:
+                # Receive the message length
+                length_data = self.request.recv(4)
+                if not length_data:
                     break
-                
-                # Decode the CBOR message
-                message = cbor2.loads(data)
-                print(f"Received: {message}")
-                # Example response, TODO: Implement message handler
-                response = {"status": "OK"}
-                self.request.sendall(cbor2.dumps(response))
+
+                # Read the full message
+                message_length = struct.unpack(">I", length_data)[0]
+                data = self.request.recv(message_length - 4)
+
+                # Parse and handle the message
+                payload = handler.parse_message(length_data + data)
+                handler.handle_message(payload)
             except Exception as e:
                 print(f"Error: {e}")
                 break

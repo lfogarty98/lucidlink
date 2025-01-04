@@ -4,7 +4,8 @@ import struct
 from message_type import MessageType
 
 class MessageHandler:
-    def __init__(self):
+    def __init__(self, connection):
+        self.connection = connection
         self.received_uuids = set()
 
     def parse_message(self, data):
@@ -42,8 +43,18 @@ class MessageHandler:
             self.handle_request_device_status(payload)
         else:
             print(f"Unknown message type: {message_type}")
+    
+    def send_message(self, message):
+        """Encode and send a message over TCP."""
+        cbor_payload = cbor2.dumps(message)
+        length = struct.pack(">I", len(cbor_payload) + 4)  # Include the 4-byte length in total
+        try:
+            self.connection.sendall(length + cbor_payload)  # Send over the same connection
+        except Exception as e:
+            print(f"Failed to send message: {e}")
 
-    # Handlers for each message type
+
+    ## Handlers for each message type ##
     def handle_version_check(self, payload):
         version = payload["payload"]["version"]
         print(f"Received Version Check: {version}")
@@ -80,9 +91,3 @@ class MessageHandler:
                 "firmware_hash": "abc123"
             }
         })
-
-    def send_message(self, message):
-        """Encode and send a message over TCP."""
-        cbor_payload = cbor2.dumps(message)
-        length = struct.pack(">I", len(cbor_payload) + 4)  # Include the 4-byte length in total
-        return length + cbor_payload
