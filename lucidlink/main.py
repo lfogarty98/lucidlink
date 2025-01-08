@@ -1,11 +1,12 @@
 from mdns_service import MDNSService
 from tcp_server import TCPServer
+import time
 
 def main():
     # Initialize mDNS service
     mdns = MDNSService(service_name="LucidLink Host._lucidlink._tcp.local.",
-                       service_type="_lucidlink._tcp.local.",
-                       port=4572)
+                    service_type="_lucidlink._tcp.local.",
+                    port=4572)
 
     # Start the mDNS service
     mdns.start()

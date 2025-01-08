@@ -10,7 +10,6 @@ def simulate_device(host='127.0.0.1', port=4572):
         print(f"Connecting to {host}:{port}...")
         with socket.create_connection((host, port)) as device_socket:
             print("Connected to the host.")
-
             # Send a Version Check message
             message = {
                 "type": MessageType.VERSION_CHECK,
@@ -31,12 +30,9 @@ def simulate_device(host='127.0.0.1', port=4572):
                 response_data = device_socket.recv(response_length - 4)
                 response = cbor2.loads(response_data)
                 print(f"Received response: {response}")
-                break
+                # break
+                # keep the connection open for further communication
             
-            # response_length = struct.unpack(">I", device_socket.recv(4))[0]
-            # response_data = device_socket.recv(response_length - 4)
-            # response = cbor2.loads(response_data)
-            # print(f"Received response: {response}")
 
             # Simulate disconnecting
             print("Disconnecting from the host.")

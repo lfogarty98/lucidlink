@@ -41,6 +41,10 @@ class MessageHandler:
             self.handle_device_status(payload)
         elif message_type == MessageType.REQUEST_DEVICE_STATUS:
             self.handle_request_device_status(payload)
+        elif message_type == MessageType.REQUEST_SYNCHRONIZATION:
+            self.handle_request_synchronization(payload)
+        elif message_type == MessageType.CHANGE_CONFIGURATION:
+            self.handle_change_configuration(payload)
         else:
             print(f"Unknown message type: {message_type}")
     
@@ -73,6 +77,7 @@ class MessageHandler:
         status = payload["payload"]
         print(f"Device Status: {status}")
 
+    # TODO: move this to another class (server class probably), since this can only be sent by the host
     def handle_request_device_status(self, payload):
         print("Received Request Device Status")
         # Send a Device Status message
@@ -91,3 +96,12 @@ class MessageHandler:
                 "firmware_hash": "abc123"
             }
         })
+        
+    def handle_request_synchronization(self, payload):
+        config = payload["payload"]["last_config"]
+        schedule = payload["payload"]["schedule"]
+        print(f'Received Request Synchronization: {config}, {schedule}')
+        
+    # TODO: move this to another class, since this can only be sent by the host
+    def handle_change_configuration(self, payload):
+        print(f"Received Change Configuration: {payload['payload']}")
