@@ -39,12 +39,12 @@ class MessageHandler:
             self.handle_version_reply(payload)
         elif message_type == MessageType.DEVICE_STATUS:
             self.handle_device_status(payload)
-        elif message_type == MessageType.REQUEST_DEVICE_STATUS:
-            self.handle_request_device_status(payload)
         elif message_type == MessageType.REQUEST_SYNCHRONIZATION:
             self.handle_request_synchronization(payload)
-        elif message_type == MessageType.CHANGE_CONFIGURATION:
-            self.handle_change_configuration(payload)
+        elif message_type == MessageType.SOFT_ERROR:
+            self.handle_soft_error(payload)
+        elif message_type == MessageType.HARD_ERROR:
+            self.handle_hard_error(payload)
         else:
             print(f"Unknown message type: {message_type}")
     
@@ -56,7 +56,6 @@ class MessageHandler:
             self.connection.sendall(length + cbor_payload)  # Send over the same connection
         except Exception as e:
             print(f"Failed to send message: {e}")
-
 
     ## Handlers for each message type ##
     def handle_version_check(self, payload):
@@ -76,32 +75,16 @@ class MessageHandler:
     def handle_device_status(self, payload):
         status = payload["payload"]
         print(f"Device Status: {status}")
-
-    # TODO: move this to another class (server class probably), since this can only be sent by the host
-    def handle_request_device_status(self, payload):
-        print("Received Request Device Status")
-        # Send a Device Status message
-        self.send_message({
-            "type": MessageType.DEVICE_STATUS,
-            "idem_uuid": str(uuid.uuid4()),
-            "payload": {
-                "healthy": True,
-                "battery_voltage": 3.8,
-                "battery_soc": 0.8,
-                "uptime": 9001,
-                "cpu_load": 0.2,
-                "min_free_heap": 51234,
-                "rssi": "-70",
-                "is_wifi6": True,
-                "firmware_hash": "abc123"
-            }
-        })
         
     def handle_request_synchronization(self, payload):
         config = payload["payload"]["last_config"]
         schedule = payload["payload"]["schedule"]
         print(f'Received Request Synchronization: {config}, {schedule}')
         
-    # TODO: move this to another class, since this can only be sent by the host
-    def handle_change_configuration(self, payload):
-        print(f"Received Change Configuration: {payload['payload']}")
+    def handle_soft_error(self, payload):
+        error_msg = payload["payload"]["msg"]
+        print(f"Soft Error: {error_msg}")
+    
+    def handle_hard_error(self, payload):
+        error_msg = payload["payload"]["msg"]
+        print(f"Hard Error: {error_msg}")

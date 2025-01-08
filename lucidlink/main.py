@@ -1,6 +1,5 @@
 from mdns_service import MDNSService
 from tcp_server import TCPServer
-import time
 
 def main():
     # Initialize mDNS service

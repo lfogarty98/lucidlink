@@ -1,8 +1,12 @@
 import socketserver
 import cbor2
 import struct
+import uuid
 import threading
+import time
 from message_handler import MessageHandler
+from message_type import MessageType
+
 
 # Global list of active connections, shared across two threads
 active_connections = []
@@ -47,24 +51,69 @@ class TCPServer:
         server_thread.start()
         
         # Simulate frontend sending a message to the device
+        print("Simulating frontend sending a message to the device...")
         breakpoint()
-        self.send_message_to_device({
-            "type": 1234,
-            "idem_uuid": 928357,
-            "payload": {"version": "bonjour"}
-        })
+        self.send_hard_error("Critical error occurred") # Send a Hard Error message, for example
+        # self.send_version_check() # Send a Version Check message, for example
 
     def stop(self):
+        print("TCP server stopped")
         self.server.shutdown()
         self.server.server_close()
-        print("TCP server stopped")
+    
+    ## Frontend message senders ## 
     
     def send_message_to_device(self, message):
         """Send a message to a specific connection or broadcast to all."""
         cbor_payload = cbor2.dumps(message)
         length = struct.pack(">I", len(cbor_payload) + 4)  # Include the 4-byte length
-        if self.active_connections:
-                conn, addr = self.active_connections[0]
+        if active_connections:
+                conn, addr = active_connections[0]
                 conn.sendall(length + cbor_payload)
         else:
             print("No active connection found")
+            
+    def send_version_check(self):
+        self.send_message_to_device({
+            "type": MessageType.VERSION_CHECK,
+            "idem_uuid": str(uuid.uuid4()),
+            "payload": {
+                "version": "1.0.0",
+                "protocol": 1,
+            }
+        })
+    
+    def send_request_device_status(self):
+        self.send_message_to_device({
+            "type": MessageType.REQUEST_DEVICE_STATUS,
+            "idem_uuid": str(uuid.uuid4()),
+            "payload": {}
+        })
+    
+    def send_request_synchronization(self):
+        # TODO: Implement
+        pass
+    
+    def send_change_configuration(self):
+        # TODO: Implement
+        pass
+    
+    def send_soft_error(self, error_msg):
+        self.send_message_to_device({
+            "type": MessageType.SOFT_ERROR,
+            "idem_uuid": str(uuid.uuid4()),
+            "payload": {
+                "msg": error_msg,
+            }
+        })
+        
+    def send_hard_error(self, error_msg):
+        self.send_message_to_device({
+            "type": MessageType.HARD_ERROR,
+            "idem_uuid": str(uuid.uuid4()),
+            "payload": {
+                "msg": error_msg,
+            }
+        })
+        print("Hard error sent")
+        self.stop() # Stop the server after sending a hard error
